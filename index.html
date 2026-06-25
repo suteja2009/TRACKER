@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JEE 2027</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#1a0a2e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="JEE 2027">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<style>
+  body{margin:0;min-height:100vh;background:#1a0a2e;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'DM Sans',Arial,sans-serif;color:#f5c842;padding:24px;box-sizing:border-box;}
+  h1{font-size:2rem;font-weight:900;margin:0 0 6px;letter-spacing:-1px;}
+  h1 span{color:#c084fc;}
+  p{color:#c084fc;font-size:.85rem;margin:0 0 36px;opacity:.7;}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;max-width:360px;}
+  a{display:flex;flex-direction:column;align-items:center;gap:8px;padding:22px 12px;border-radius:18px;text-decoration:none;font-weight:700;font-size:.85rem;transition:transform .15s;}
+  a:active{transform:scale(.96);}
+  .tracker-m{background:rgba(245,200,66,.1);border:2px solid rgba(245,200,66,.35);color:#f5c842;}
+  .attend-m{background:rgba(192,132,252,.1);border:2px solid rgba(192,132,252,.35);color:#c084fc;}
+  .tracker-l{background:rgba(96,160,255,.1);border:2px solid rgba(96,160,255,.35);color:#60a0ff;}
+  .attend-l{background:rgba(96,200,144,.1);border:2px solid rgba(96,200,144,.35);color:#60c890;}
+  .icon{font-size:2rem;}
+  .lbl{font-size:.7rem;opacity:.5;font-weight:500;}
+  #swStatus{position:fixed;bottom:16px;font-size:.7rem;opacity:.3;color:#fff;}
+</style>
+</head>
+<body>
+<h1>JEE <span>2027</span></h1>
+<p>Select a file to open</p>
+<div class="cards">
+  <a href="/tracker.html" class="tracker-m">
+    <span class="icon">📱</span>
+    <span>Tracker</span>
+    <span class="lbl">Mobile</span>
+  </a>
+  <a href="/attendance.html" class="attend-m">
+    <span class="icon">✅</span>
+    <span>Attendance</span>
+    <span class="lbl">Mobile</span>
+  </a>
+  <a href="/tracker-laptop.html" class="tracker-l">
+    <span class="icon">💻</span>
+    <span>Tracker</span>
+    <span class="lbl">Laptop</span>
+  </a>
+  <a href="/attendance-laptop.html" class="attend-l">
+    <span class="icon">📊</span>
+    <span>Attendance</span>
+    <span class="lbl">Laptop</span>
+  </a>
+</div>
+<div id="swStatus"></div>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./service-worker.js').then(reg => {
+    document.getElementById('swStatus').textContent = '✅ Offline ready';
+  }).catch(e => {
+    document.getElementById('swStatus').textContent = '⚠ SW: ' + e.message;
+  });
+}
+</script>
+</body>
+</html>

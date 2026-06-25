@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#1a0a2e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="JEE 2027">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JEE Attendance — Mobile</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+
+:root {
+  --done:#22c55e; --prog:#f97316; --pend:#eab308; --none:#ef4444;
+  --done-bg:#14532d; --prog-bg:#431407; --pend-bg:#422006; --none-bg:#450a0a;
+}
+[data-theme="dark"] {
+  --bg:#1a0a2e; --bg2:#2d1b4e; --bg3:#231340; --surface:#200e3a;
+  --border:#4a2d7a; --text:#f5c842; --text2:#c084fc; --accent:#f5c842; --accent2:#ffe066;
+}
+[data-theme="light"] {
+  --bg:#f0f4fa; --bg2:#ffffff; --bg3:#e8edf5; --surface:#ffffff;
+  --border:#d1dce8; --text:#1a2436; --text2:#5a7090; --accent:#2563eb; --accent2:#3b82f6;
+  --done-bg:#dcfce7; --prog-bg:#ffedd5; --pend-bg:#fef9c3; --none-bg:#fee2e2;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s;}
+
+header{background:linear-gradient(135deg,#1a0a2e 0%,#2d1b4e 55%,#3d1f6e 100%);padding:20px 28px 16px;box-shadow:0 4px 24px rgba(0,0,0,.5);}
+.header-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.logo{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;color:#fff;}
+.logo span{color:#f5c842;}
+
+.btn{font-family:'DM Sans',sans-serif;padding:7px 16px;border-radius:8px;border:none;cursor:pointer;font-size:.82rem;font-weight:500;transition:all .2s;display:inline-flex;align-items:center;gap:6px;}
+.btn-ghost{background:rgba(255,255,255,.12);color:#fff;backdrop-filter:blur(4px);}
+.btn-ghost:hover{background:rgba(255,255,255,.22);}
+.btn-primary{background:#f5c842;color:#000;font-weight:700;}
+.btn-primary:hover{background:#ffe066;}
+.btn-danger{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#ff3b5c;}
+.btn-danger:hover{background:rgba(239,68,68,.3);}
+
+.main{padding:24px 28px;max-width:1100px;margin:0 auto;}
+
+/* Tabs */
+.tabs-wrap{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 28px;display:flex;gap:0;overflow-x:auto;}
+.tab{font-family:'Syne',sans-serif;padding:13px 22px;cursor:pointer;font-size:.85rem;font-weight:600;color:var(--text2);border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap;}
+.tab:hover{color:var(--accent2);}
+.tab.active{color:var(--accent2);border-bottom-color:var(--accent);}
+.panel{display:none;}
+.panel.active{display:block;}
+
+/* Scanner */
+.scan-area{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:24px;margin-bottom:20px;text-align:center;}
+.scan-area h2{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;margin-bottom:6px;}
+.scan-area p{font-size:.82rem;opacity:.45;margin-bottom:18px;line-height:1.5;}
+.camera-wrap{position:relative;width:100%;max-width:400px;margin:0 auto 16px;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:4/3;border:2px solid var(--border);}
+.camera-wrap video{width:100%;height:100%;object-fit:cover;display:block;}
+.camera-wrap canvas{display:none;}
+.scan-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+.scan-frame{width:220px;height:140px;border:2px solid #f5c842;border-radius:8px;box-shadow:0 0 0 9999px rgba(0,0,0,.45);position:relative;}
+.scan-frame::before,.scan-frame::after{content:'';position:absolute;width:20px;height:20px;border-color:#f5c842;border-style:solid;}
+.scan-frame::before{top:-2px;left:-2px;border-width:3px 0 0 3px;border-radius:4px 0 0 0;}
+.scan-frame::after{bottom:-2px;right:-2px;border-width:0 3px 3px 0;border-radius:0 0 4px 0;}
+.scan-line{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#f5c842,transparent);animation:scanline 2s linear infinite;}
+@keyframes scanline{from{top:0}to{top:100%}}
+.scan-result{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.35);border-radius:12px;padding:14px 18px;margin-bottom:14px;display:none;}
+.scan-result.show{display:block;}
+.scan-result-name{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;color:var(--done);}
+.scan-result-sub{font-size:.78rem;opacity:.55;margin-top:3px;}
+.scan-err{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:12px;padding:14px 18px;margin-bottom:14px;display:none;color:var(--none);font-size:.82rem;}
+.scan-err.show{display:block;}
+
+/* Attendance mark buttons */
+.subj-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px;}
+.subj-btn{padding:14px 8px;border-radius:12px;border:2px solid transparent;cursor:pointer;font-family:'Syne',sans-serif;font-size:.82rem;font-weight:700;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:6px;}
+.subj-btn-phy{background:rgba(96,160,255,.1);border-color:rgba(96,160,255,.3);color:#60a0ff;}
+.subj-btn-phy:hover,.subj-btn-phy.active{background:rgba(96,160,255,.25);border-color:#60a0ff;}
+.subj-btn-chem{background:rgba(96,200,144,.1);border-color:rgba(96,200,144,.3);color:#60c890;}
+.subj-btn-chem:hover,.subj-btn-chem.active{background:rgba(96,200,144,.25);border-color:#60c890;}
+.subj-btn-math{background:rgba(245,200,66,.1);border-color:rgba(245,200,66,.3);color:#f5c842;}
+.subj-btn-math:hover,.subj-btn-math.active{background:rgba(245,200,66,.25);border-color:#f5c842;}
+.subj-btn .subj-icon{font-size:1.6rem;}
+.subj-btn .subj-lbl{font-size:.7rem;}
+
+/* Stats cards */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;text-align:center;}
+.stat-val{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;}
+.stat-lbl{font-size:.72rem;color:var(--text2);margin-top:3px;text-transform:uppercase;letter-spacing:.5px;}
+.stat-sub{font-size:.7rem;opacity:.4;margin-top:2px;}
+
+/* Card */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:14px;}
+.card-title{font-family:'Syne',sans-serif;font-size:.72rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px;}
+
+/* Hours per subject bar */
+.hrs-bar-wrap{margin-bottom:10px;}
+.hrs-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.hrs-bar-label{font-size:.78rem;font-weight:600;min-width:90px;}
+.hrs-bar-track{flex:1;height:10px;background:var(--border);border-radius:99px;overflow:hidden;}
+.hrs-bar-fill{height:100%;border-radius:99px;transition:width .6s cubic-bezier(.4,0,.2,1);}
+.hrs-bar-val{font-family:'Syne',sans-serif;font-size:.78rem;font-weight:700;min-width:44px;text-align:right;}
+
+/* History table */
+table{width:100%;border-collapse:collapse;}
+thead th{background:var(--bg3);font-family:'Syne',sans-serif;font-size:.72rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);}
+tbody tr{border-bottom:1px solid var(--border);transition:background .15s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:var(--bg3);}
+td{padding:9px 12px;font-size:.82rem;vertical-align:middle;}
+.status-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;font-size:.72rem;font-weight:700;}
+.status-present{background:rgba(34,197,94,.15);color:var(--done);}
+.status-absent{background:rgba(239,68,68,.15);color:var(--none);}
+
+/* Toast */
+#attToast{position:fixed;bottom:28px;right:28px;z-index:9999;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:10px 18px;font-size:.82rem;font-family:'Syne',sans-serif;font-weight:700;box-shadow:0 8px 32px rgba(0,0,0,.4);opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none;}
+#attToast.show{opacity:1;transform:translateY(0);}
+
+/* Manual entry */
+.manual-form{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;}
+/* ══ MOBILE ══ */
+body{padding-bottom:76px;}
+header{padding:12px 14px 8px;}
+.main{padding:12px 10px;}
+.tabs-wrap{display:none!important;}
+.header-top{flex-wrap:wrap;gap:8px;}
+.mobile-nav{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:200;background:var(--bg2);border-top:2px solid var(--border);padding:6px 0 max(6px,env(safe-area-inset-bottom));justify-content:space-around;box-shadow:0 -4px 20px rgba(0,0,0,.4);}
+.mobile-nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 6px;border-radius:10px;cursor:pointer;flex:1;border:none;background:none;color:var(--text2);font-family:'Syne',sans-serif;font-size:.52rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+.mobile-nav-item.active{color:var(--accent);}
+.mobile-nav-item .nav-icon{font-size:1.25rem;line-height:1;}
+.btn{min-height:44px;padding:10px 14px;}
+select,input[type="date"],input[type="number"],input[type="text"]{padding:10px 12px;font-size:.9rem;min-height:44px;}
+.manual-form{grid-template-columns:1fr;}
+.subj-btns{grid-template-columns:1fr 1fr 1fr;}
+.stats-grid{grid-template-columns:repeat(2,1fr);}
+.card{overflow-x:auto;}
+table{min-width:480px;}
+td,th{padding:8px 10px;font-size:.78rem;}
+@media print{.mobile-nav{display:none!important;}}
+
+/* Heatmap */
+.heatmap-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:10px;}
+.heatmap-cell{aspect-ratio:1;border-radius:4px;cursor:pointer;transition:transform .1s;position:relative;}
+.heatmap-cell:hover{transform:scale(1.15);}
+.heatmap-cell[title]:hover::after{content:attr(title);position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:.65rem;white-space:nowrap;z-index:10;font-family:'DM Sans',sans-serif;color:var(--text);}
+
+/* Streak */
+.streak-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(255,140,0,.1);border:1px solid rgba(255,140,0,.3);border-radius:99px;padding:6px 14px;font-size:.82rem;font-weight:700;color:#ff8c00;}
+
+/* Chart mini */
+.weekly-chart{display:flex;gap:6px;align-items:flex-end;height:70px;margin-top:12px;}
+.weekly-chart-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:0;}
+.weekly-chart-bar{width:100%;border-radius:3px 3px 0 0;transition:height .4s cubic-bezier(.4,0,.2,1);}
+.weekly-chart-lbl{font-size:.6rem;opacity:.45;margin-top:3px;}
+
+/* Sync section */
+.sync-section{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:14px;font-size:.8rem;color:var(--text2);line-height:1.7;}
+.sync-section b{color:var(--text);}
+.sync-link{color:var(--accent);text-decoration:none;font-weight:700;}
+
+/* Numpad CSS removed */
+
+@media print{header,.tabs-wrap,.btn,#scanSection{display:none!important;}body{background:#fff!important;color:#000!important;}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="logo">JEE <span>2027</span> · <span style="color:#c084fc">Attendance</span></div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost" onclick="toggleTheme()">🌗 Theme</button>
+      <button class="btn btn-ghost" id="fsBtn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+      <button class="btn btn-ghost" onclick="exportAttendanceJSON()">📤 Export JSON</button>
+      <label class="btn btn-ghost" style="cursor:pointer" title="Import JSON from other device">📥 Import JSON<input type="file" id="attImportFile" accept=".json" style="display:none" onchange="importAttendanceJSON(event)"></label>
+      <button class="btn btn-primary" onclick="exportAttendance()">📊 CSV</button>
+    </div>
+  </div>
+</header>
+
+<div class="tabs-wrap">
+  <div class="tab active" onclick="showTab('mark')">📷 Mark Attendance</div>
+  <div class="tab" onclick="showTab('dashboard')">📊 Dashboard</div>
+  <div class="tab" onclick="showTab('history')">📋 History</div>
+  <div class="tab" onclick="showTab('hours')">⏰ Study Hours</div>
+</div>
+<nav class="mobile-nav">
+  <button class="mobile-nav-item active" id="mnav-mark" onclick="mnavGo('mark')"><span class="nav-icon">✅</span>Mark</button>
+  <button class="mobile-nav-item" id="mnav-dashboard" onclick="mnavGo('dashboard')"><span class="nav-icon">📊</span>Stats</button>
+  <button class="mobile-nav-item" id="mnav-history" onclick="mnavGo('history')"><span class="nav-icon">📋</span>History</button>
+  <button class="mobile-nav-item" id="mnav-hours" onclick="mnavGo('hours')"><span class="nav-icon">⏰</span>Hours</button>
+</nav>
+
+<div class="main">
+
+  <!-- MARK ATTENDANCE -->
+  <div id="panel-mark" class="panel active">
+    <div style="max-width:600px;margin:0 auto">
+
+      <!-- Check In / Check Out with subject picker -->
+      <div class="scan-area" id="scanSection">
+        <h2>🏫 Study Room</h2>
+        <p>Pick your subject(s) then tap Check In. Check Out when you leave — session hours saved automatically.</p>
+
+        <!-- STEP 1: Subject picker (shown before check-in) -->
+        <div id="subjectPickerWrap" style="margin-bottom:18px">
+          <div style="font-family:'Syne',sans-serif;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text2);margin-bottom:10px">Step 1 — Pick Subject(s)</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+            <button id="pick-phy" onclick="togglePick('phy')"
+              style="padding:14px 6px;border-radius:12px;border:2px solid rgba(96,160,255,.3);background:rgba(96,160,255,.08);
+                     color:#60a0ff;font-family:'Syne',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;
+                     display:flex;flex-direction:column;align-items:center;gap:5px;transition:all .2s">
+              <span style="font-size:1.5rem">⚛️</span>Physics
+            </button>
+            <button id="pick-chem" onclick="togglePick('chem')"
+              style="padding:14px 6px;border-radius:12px;border:2px solid rgba(96,200,144,.3);background:rgba(96,200,144,.08);
+                     color:#60c890;font-family:'Syne',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;
+                     display:flex;flex-direction:column;align-items:center;gap:5px;transition:all .2s">
+              <span style="font-size:1.5rem">🧪</span>Chemistry
+            </button>
+            <button id="pick-math" onclick="togglePick('math')"
+              style="padding:14px 6px;border-radius:12px;border:2px solid rgba(245,200,66,.3);background:rgba(245,200,66,.08);
+                     color:#f5c842;font-family:'Syne',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;
+                     display:flex;flex-direction:column;align-items:center;gap:5px;transition:all .2s">
+              <span style="font-size:1.5rem">📐</span>Maths
+            </button>
+          </div>
+          <div id="pickError" style="color:#ef4444;font-size:.75rem;margin-top:8px;display:none;text-align:center">⚠️ Please select at least one subject</div>
+        </div>
+
+        <!-- STEP 1b: Chapter picker (shown after at least one subject picked) -->
+        <div id="chapterPickerWrap" style="margin-bottom:18px;display:none">
+          <div style="font-family:'Syne',sans-serif;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text2);margin-bottom:10px">Step 2 — Pick Chapter (Optional)</div>
+          <div id="chapter-selects-wrap" style="display:flex;flex-direction:column;gap:10px"></div>
+          <div style="font-size:.72rem;color:var(--text2);opacity:.5;margin-top:8px;text-align:center">Selecting a chapter syncs study time to JEE Tracker per-chapter analysis</div>
+        </div>
+
+        <!-- STEP 2: Live timer (shown after check-in) -->
+        <div id="liveTimerWrap" style="display:none;margin-bottom:16px;text-align:center">
+          <div style="font-family:'Syne',sans-serif;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text2);margin-bottom:6px">Session Running</div>
+          <div id="liveTimer" style="font-family:'Syne',sans-serif;font-size:2.6rem;font-weight:900;color:var(--accent);letter-spacing:-2px">0:00:00</div>
+          <div id="sessionSubjects" style="font-size:.78rem;color:var(--text2);margin-top:4px"></div>
+        </div>
+
+        <!-- Status line -->
+        <div id="checkStatus" style="text-align:center;font-size:.82rem;font-family:'Syne',sans-serif;font-weight:600;margin-bottom:14px;min-height:20px;color:var(--text2)"></div>
+
+        <!-- Check In / Out buttons -->
+        <div style="display:flex;gap:12px;justify-content:center;margin-bottom:12px">
+          <button class="btn" id="checkInBtn" onclick="doCheckIn()"
+            style="background:rgba(34,197,94,.15);border:2px solid rgba(34,197,94,.4);color:var(--done);
+                   font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;padding:16px 32px;
+                   border-radius:14px;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .2s">
+            <span style="font-size:1.8rem">🟢</span>
+            Check In
+            <span style="font-size:.65rem;font-weight:500;opacity:.6">Start Session</span>
+          </button>
+          <button class="btn" id="checkOutBtn" onclick="doCheckOut()"
+            style="background:rgba(239,68,68,.1);border:2px solid rgba(239,68,68,.35);color:var(--none);
+                   font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;padding:16px 32px;
+                   border-radius:14px;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .2s;opacity:.4;pointer-events:none">
+            <span style="font-size:1.8rem">🔴</span>
+            Check Out
+            <span style="font-size:.65rem;font-weight:500;opacity:.6">End Session</span>
+          </button>
+        </div>
+
+        <div id="sessionLog" style="margin-top:6px;font-size:.78rem;opacity:.5;text-align:center"></div>
+      </div>
+
+      <!-- Subject selection & mark -->
+      <div class="card">
+        <div class="card-title">Select Subject & Mark Attendance</div>
+        <div id="todayDate" style="font-size:.82rem;opacity:.5;margin-bottom:12px"></div>
+        <div class="subj-btns">
+          <button class="subj-btn subj-btn-phy" onclick="markAttendance('phy')" id="mbtn-phy">
+            <span class="subj-icon">⚛️</span><span>Physics</span><span class="subj-lbl" id="mbtn-phy-lbl">Not marked</span>
+          </button>
+          <button class="subj-btn subj-btn-chem" onclick="markAttendance('chem')" id="mbtn-chem">
+            <span class="subj-icon">🧪</span><span>Chemistry</span><span class="subj-lbl" id="mbtn-chem-lbl">Not marked</span>
+          </button>
+          <button class="subj-btn subj-btn-math" onclick="markAttendance('math')" id="mbtn-math">
+            <span class="subj-icon">📐</span><span>Maths</span><span class="subj-lbl" id="mbtn-math-lbl">Not marked</span>
+          </button>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input type="date" id="markDatePicker" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-size:.82rem;outline:none;font-family:'DM Sans',sans-serif">
+          <button class="btn btn-ghost" onclick="setMarkDateToday()">Today</button>
+          <button class="btn btn-danger" onclick="clearTodayAttendance()">🗑 Clear Today</button>
+        </div>
+      </div>
+
+      <!-- Manual entry fallback -->
+      <div class="card">
+        <div class="card-title">Manual Entry (if camera unavailable)</div>
+        <div class="manual-form">
+          <div>
+            <div style="font-size:.74rem;opacity:.45;margin-bottom:5px">Date</div>
+            <input type="date" id="manualDate" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:.82rem;outline:none">
+          </div>
+          <div>
+            <div style="font-size:.74rem;opacity:.45;margin-bottom:5px">Subject</div>
+            <select id="manualSubj" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:.82rem;outline:none">
+              <option value="phy">⚛️ Physics</option>
+              <option value="chem">🧪 Chemistry</option>
+              <option value="math">📐 Maths</option>
+              <option value="all">All Subjects</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="manualMark()">+ Mark</button>
+        </div>
+      </div>
+
+      <!-- Sync note -->
+      <div class="sync-section">
+        <b>📡 Linked with JEE Tracker</b><br>
+        This attendance file shares the same <b>IndexedDB</b> database (<code>jee12tracker</code>) as your main JEE Tracker (v8). Study hours logged there appear automatically in the <b>Study Hours</b> tab here. Open both files in the <b>same browser</b> for live data sharing.
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="panel-dashboard" class="panel">
+    <div style="max-width:800px;margin:0 auto">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+        <h2 style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800">📊 Attendance Dashboard</h2>
+        <div id="streakPill" class="streak-pill">🔥 0 day streak</div>
+      </div>
+      <div class="stats-grid" id="dashStats"></div>
+
+      <!-- Per-subject attendance % bars -->
+      <div class="card">
+        <div class="card-title">Attendance % by Subject</div>
+        <div id="subjAttBars"></div>
+      </div>
+
+      <!-- Weekly chart -->
+      <div class="card">
+        <div class="card-title">Last 7 Days</div>
+        <div id="weeklyChart" class="weekly-chart"></div>
+        <div style="display:flex;gap:14px;margin-top:8px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:5px;font-size:.72rem;color:#60a0ff"><div style="width:8px;height:8px;background:#60a0ff;border-radius:2px"></div>Physics</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:.72rem;color:#60c890"><div style="width:8px;height:8px;background:#60c890;border-radius:2px"></div>Chemistry</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--accent)"><div style="width:8px;height:8px;background:var(--accent);border-radius:2px"></div>Maths</div>
+        </div>
+      </div>
+
+      <!-- Monthly heatmap -->
+      <div class="card">
+        <div class="card-title">30-Day Attendance Heatmap</div>
+        <div style="display:flex;gap:10px;margin-bottom:8px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:5px;font-size:.72rem;opacity:.5"><div style="width:10px;height:10px;background:var(--border);border-radius:2px"></div>None</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:.72rem;color:#60a0ff"><div style="width:10px;height:10px;background:#60a0ff;border-radius:2px"></div>Physics only</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:.72rem;color:#60c890"><div style="width:10px;height:10px;background:#60c890;border-radius:2px"></div>Chemistry only</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--accent)"><div style="width:10px;height:10px;background:var(--accent);border-radius:2px"></div>Maths only</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:.72rem;color:#22c55e"><div style="width:10px;height:10px;background:#22c55e;border-radius:2px"></div>2+ subjects</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:.72rem;color:#f5c842"><div style="width:10px;height:10px;background:#f5c842;border-radius:2px"></div>All 3</div>
+        </div>
+        <div class="heatmap-grid" id="heatmapGrid"></div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:4px" id="heatmapDays"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div id="panel-history" class="panel">
+    <div style="max-width:800px;margin:0 auto">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+        <h2 style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800">📋 Attendance History</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <select id="histFilter" onchange="renderHistory()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-size:.8rem;outline:none">
+            <option value="all">All Subjects</option>
+            <option value="phy">Physics</option>
+            <option value="chem">Chemistry</option>
+            <option value="math">Maths</option>
+          </select>
+          <button class="btn btn-danger" onclick="clearAllAttendance()">🗑 Clear All</button>
+        </div>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <table>
+          <thead><tr><th>Date</th><th>Day</th><th>Physics</th><th>Chemistry</th><th>Maths</th><th>Total</th><th></th></tr></thead>
+          <tbody id="histTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- STUDY HOURS (linked from tracker) -->
+  <div id="panel-hours" class="panel">
+    <div style="max-width:800px;margin:0 auto">
+      <h2 style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;margin-bottom:6px">⏰ Study Hours (from JEE Tracker)</h2>
+      <p style="font-size:.82rem;opacity:.45;margin-bottom:20px">Data pulled live from the shared IndexedDB — same as your JEE Tracker v8.</p>
+      <div class="stats-grid" id="hrsStats"></div>
+      <div class="card">
+        <div class="card-title">Hours by Subject (All Time)</div>
+        <div id="hrsBars"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Last 7 Days — Hours per Day</div>
+        <div id="hrsWeekChart" class="weekly-chart" style="height:90px"></div>
+        <div id="hrsWeekLabels" style="display:flex;gap:6px;margin-top:5px"></div>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-family:'Syne',sans-serif;font-size:.72rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1.5px">Study History (last 30 days)</div>
+        <div id="hrsHistory" style="max-height:400px;overflow-y:auto"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="attToast"></div>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DATABASE — Shares the SAME IndexedDB as the tracker (jee12tracker)
+// ═══════════════════════════════════════════════════════════════════════════
+const DB_NAME = 'jee12tracker';
+const DB_VERSION = 8; // must match JEE Tracker v8
+let db = null;
+
+function dbOpen() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains('chapters')) {
+        const cs = d.createObjectStore('chapters', {keyPath:['subj','name']});
+        cs.createIndex('by_subj','subj',{unique:false});
+      }
+      if (!d.objectStoreNames.contains('kv'))         d.createObjectStore('kv',{keyPath:'key'});
+      if (!d.objectStoreNames.contains('daily'))      d.createObjectStore('daily',{keyPath:'date'});
+      if (!d.objectStoreNames.contains('hours'))      d.createObjectStore('hours',{keyPath:'date'});
+      if (!d.objectStoreNames.contains('milestones')) d.createObjectStore('milestones',{keyPath:'id',autoIncrement:true});
+      if (!d.objectStoreNames.contains('qtimelog'))  {
+        const ql = d.createObjectStore('qtimelog',{keyPath:'id',autoIncrement:true});
+        ql.createIndex('by_date','date',{unique:false});
+      }
+      // Attendance store: {date (YYYY-MM-DD), phy:bool, chem:bool, math:bool, ts}
+      if (!d.objectStoreNames.contains('attendance')) d.createObjectStore('attendance',{keyPath:'date'});
+      // chapter_hours: shared with JEE Tracker for per-chapter time tracking
+      if (!d.objectStoreNames.contains('chapter_hours')) {
+        const chs = d.createObjectStore('chapter_hours', {keyPath:'key'});
+        chs.createIndex('by_subj', 'subj', {unique:false});
+      }
+      // chap_daily: per-chapter question counts (shared with JEE Tracker)
+      if (!d.objectStoreNames.contains('chap_daily')) {
+        const cd = d.createObjectStore('chap_daily', {keyPath:'key'});
+        cd.createIndex('by_subj', 'subj', {unique:false});
+      }
+      // weekly + allen_tests: added in v3/v4 by tracker - create here to avoid version conflict
+      if (!d.objectStoreNames.contains('weekly'))      d.createObjectStore('weekly',{keyPath:'weekKey'});
+      if (!d.objectStoreNames.contains('allen_tests')) d.createObjectStore('allen_tests',{keyPath:'id',autoIncrement:true});
+      // todos: added in v7 by JEE Tracker — must mirror here to avoid version mismatch
+      if (!d.objectStoreNames.contains('todos')) {
+        d.createObjectStore('todos', {keyPath:'id'});
+      }
+    };
+    req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+    req.onerror   = (e) => { reject(new Error(e.target.error?.message || 'IndexedDB open failed')); };
+  });
+}
+
+function dbGet(store, key) {
+  return new Promise((resolve) => {
+    const tx = db.transaction(store,'readonly');
+    const req = tx.objectStore(store).get(key);
+    req.onsuccess = () => resolve(req.result||null);
+    req.onerror   = () => resolve(null);
+  });
+}
+function dbPut(store, value) {
+  return new Promise((resolve,reject) => {
+    const tx = db.transaction(store,'readwrite');
+    const req = tx.objectStore(store).put(value);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror   = (e) => reject(e);
+  });
+}
+function dbDelete(store, key) {
+  return new Promise((resolve) => {
+    const tx = db.transaction(store,'readwrite');
+    tx.objectStore(store).delete(key);
+    tx.oncomplete = () => resolve();
+  });
+}
+function dbGetAll(store) {
+  return new Promise((resolve) => {
+    const tx = db.transaction(store,'readonly');
+    const req = tx.objectStore(store).getAll();
+    req.onsuccess = () => resolve(req.result||[]);
+    req.onerror   = () => resolve([]);
+  });
+}
+async function kvGet(key, fallback=null) {
+  const row = await dbGet('kv',key);
+  return row ? row.val : fallback;
+}
+async function kvSet(key,val) { return dbPut('kv',{key,val}); }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════════════════════════
+const SUBJECTS_ATT = {
+  phy: ['Electric Charges & Fields','Electrostatic Potential & Capacitance','Current Electricity','Moving Charges & Magnetism','Magnetism & Matter','Electromagnetic Induction','Alternating Current','Electromagnetic Waves','Ray Optics','Wave Optics','Dual Nature of Radiation & Matter','Atoms','Nuclei','Semiconductor Electronics'],
+  chem: ['Solutions','Electrochemistry','Chemical Kinetics','p-Block Elements','d & f Block Elements','Coordination Compounds','Haloalkanes & Haloarenes','Alcohols, Phenols & Ethers','Aldehydes, Ketones & Carboxylic Acids','Amines','Biomolecules'],
+  math: ['Relations & Functions','Inverse Trigonometric Functions','Matrices','Determinants','Continuity & Differentiability','Applications of Derivatives','Integrals','Applications of Integrals','Differential Equations','Vector Algebra','3D Geometry','Probability']
+};
+const DAYS  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function fmtDate(key) {
+  const d = new Date(key+'T00:00:00');
+  return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+}
+function shFmt(h) {
+  if (!h) return '0h';
+  const hrs = Math.floor(h), mins = Math.round((h-hrs)*60);
+  if (mins===0) return hrs+'h';
+  if (hrs===0)  return mins+'m';
+  return hrs+'h '+mins+'m';
+}
+
+let toastTimer;
+function showToast(msg, color='var(--accent)', dur=2200) {
+  const el = document.getElementById('attToast');
+  if (!el) return;
+  el.textContent = msg; el.style.color = color;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove('show'), dur);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════════════════════════════
+function showTab(tab) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+tab).classList.add('active');
+  const tabs=['mark','dashboard','history','hours'];
+  const idx=tabs.indexOf(tab);
+  if(idx>=0) document.querySelectorAll('.tab')[idx].classList.add('active');
+  if (tab==='dashboard') renderDashboard();
+  if (tab==='history')   renderHistory();
+  if (tab==='hours')     renderHours();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CHECK IN / CHECK OUT — subject picker first, then check in
+// ═══════════════════════════════════════════════════════════════════════════
+let checkInTime   = null; // Date object
+let pickedSubjects = []; // ['phy','chem','math']
+let _timerIv      = null;
+
+// Track which chapter is picked per subject
+let pickedChapters = {};
+
+// ── Subject picker toggle ──
+function togglePick(subj) {
+  if (checkInTime) return; // locked during session
+  const idx = pickedSubjects.indexOf(subj);
+  if (idx === -1) pickedSubjects.push(subj);
+  else { pickedSubjects.splice(idx, 1); delete pickedChapters[subj]; }
+  updatePickerUI();
+  updateChapterPickers();
+  document.getElementById('pickError').style.display = 'none';
+}
+
+function updateChapterPickers() {
+  const wrap = document.getElementById('chapterPickerWrap');
+  const selectsWrap = document.getElementById('chapter-selects-wrap');
+  if (!wrap || !selectsWrap) return;
+  if (pickedSubjects.length === 0) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  const colors = {phy:'#60a0ff', chem:'#60c890', math:'#f5c842'};
+  const icons = {phy:'⚛️', chem:'🧪', math:'📐'};
+  const labels = {phy:'Physics', chem:'Chemistry', math:'Maths'};
+  selectsWrap.innerHTML = pickedSubjects.map(s => {
+    const chaps = SUBJECTS_ATT[s] || [];
+    const savedChap = pickedChapters[s] || '';
+    return `<div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:1.1rem;min-width:26px">${icons[s]}</span>
+      <select id="chap-sel-${s}" onchange="pickedChapters['${s}']=this.value"
+        style="flex:1;background:var(--bg3);border:2px solid ${colors[s]}44;border-radius:10px;padding:9px 12px;
+               color:var(--text);font-size:.82rem;outline:none;font-family:'DM Sans',sans-serif">
+        <option value="">${labels[s]} — No specific chapter</option>
+        ${chaps.map(c => `<option value="${c}"${c===savedChap?' selected':''}>${c}</option>`).join('')}
+      </select>
+    </div>`;
+  }).join('');
+  pickedSubjects.forEach(s => {
+    const sel = document.getElementById('chap-sel-'+s);
+    if (sel) sel.onchange = () => { pickedChapters[s] = sel.value; };
+  });
+}
+
+function updatePickerUI() {
+  const colors = {phy:'96,160,255', chem:'96,200,144', math:'245,200,66'};
+  ['phy','chem','math'].forEach(s => {
+    const btn = document.getElementById('pick-'+s);
+    if (!btn) return;
+    const sel = pickedSubjects.includes(s);
+    btn.style.background  = sel ? `rgba(${colors[s]},.35)` : `rgba(${colors[s]},.08)`;
+    btn.style.borderColor = sel ? `rgba(${colors[s]},1)`   : `rgba(${colors[s]},.3)`;
+    btn.style.transform   = sel ? 'scale(1.04)' : 'scale(1)';
+    btn.style.boxShadow   = sel ? `0 0 12px rgba(${colors[s]},.3)` : 'none';
+  });
+}
+
+function lockPickerUI(locked) {
+  ['phy','chem','math'].forEach(s => {
+    const btn = document.getElementById('pick-'+s);
+    if (btn) btn.style.pointerEvents = locked ? 'none' : 'auto';
+    const sel = document.getElementById('chap-sel-'+s);
+    if (sel) sel.disabled = locked;
+  });
+  if (locked) {
+    const chapWrap = document.getElementById('chapterPickerWrap');
+    if (chapWrap) chapWrap.style.opacity = '.5';
+  } else {
+    const chapWrap = document.getElementById('chapterPickerWrap');
+    if (chapWrap) chapWrap.style.opacity = '1';
+  }
+}
+
+// ── Live timer ──
+function startLiveTimer() {
+  clearInterval(_timerIv);
+  const wrap = document.getElementById('liveTimerWrap');
+  const pick = document.getElementById('subjectPickerWrap');
+  if (wrap) wrap.style.display = 'block';
+  // Show picked subjects label
+  const subjEl = document.getElementById('sessionSubjects');
+  if (subjEl) {
+    const names = {phy:'⚛️ Physics', chem:'🧪 Chemistry', math:'📐 Maths'};
+    subjEl.textContent = 'Studying: ' + pickedSubjects.map(s=>names[s]).join(' · ');
+  }
+  _timerIv = setInterval(() => {
+    if (!checkInTime) { clearInterval(_timerIv); return; }
+    const secs = Math.floor((Date.now() - checkInTime) / 1000);
+    const h=Math.floor(secs/3600), m=Math.floor((secs%3600)/60), s=secs%60;
+    const el = document.getElementById('liveTimer');
+    if (el) el.textContent = `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }, 1000);
+}
+
+function stopLiveTimer() {
+  clearInterval(_timerIv);
+  const wrap = document.getElementById('liveTimerWrap');
+  if (wrap) { wrap.style.display='none'; }
+  const el = document.getElementById('liveTimer');
+  if (el) el.textContent='0:00:00';
+  const subjEl = document.getElementById('sessionSubjects');
+  if (subjEl) subjEl.textContent='';
+}
+
+// ── Check In ──
+async function doCheckIn() {
+  if (checkInTime) { showToast('⚠️ Already checked in at ' + fmtTime(checkInTime), 'var(--pend)', 2500); return; }
+  // Require at least one subject selected
+  if (pickedSubjects.length === 0) {
+    document.getElementById('pickError').style.display = 'block';
+    showToast('⚠️ Pick at least one subject first!', 'var(--pend)', 2500);
+    return;
+  }
+  // Sync chapter selections from dropdowns
+  pickedSubjects.forEach(s => {
+    const sel = document.getElementById('chap-sel-'+s);
+    if (sel && sel.value) pickedChapters[s] = sel.value;
+  });
+  checkInTime = new Date();
+  // Mark attendance for today — auto-mark picked subjects as present
+  const date = todayKey();
+  const row  = await dbGet('attendance', date) || {date, phy:false, chem:false, math:false, ts: new Date().toISOString()};
+  row.checkIn = checkInTime.toISOString();
+  row.ts      = checkInTime.toISOString();
+  row.pickedChapters = {...pickedChapters};
+  // Mark picked subjects present
+  pickedSubjects.forEach(s => row[s] = true);
+  await dbPut('attendance', row);
+  lockPickerUI(true);
+  updateCheckStatus();
+  startLiveTimer();
+  const chapLabels = pickedSubjects.map(s => {
+    const chap = pickedChapters[s];
+    const short = {phy:'Phy',chem:'Chem',math:'Math'}[s];
+    return chap ? short+': '+chap.split(' ').slice(0,2).join(' ') : short;
+  }).join(', ');
+  showToast('🟢 Checked in · ' + chapLabels, 'var(--done)', 3500);
+  document.getElementById('checkInBtn').style.opacity       = '.4';
+  document.getElementById('checkInBtn').style.pointerEvents = 'none';
+  document.getElementById('checkOutBtn').style.opacity      = '1';
+  document.getElementById('checkOutBtn').style.pointerEvents= 'auto';
+  refreshMarkBtns();
+}
+
+// ── Check Out ──
+async function doCheckOut() {
+  if (!checkInTime) { showToast('⚠️ Check In first!', 'var(--pend)', 2500); return; }
+  const outTime = new Date();
+  const diffMs  = outTime - checkInTime;
+  const diffHrs = diffMs / 3600000;
+
+  // Save session hours to hours store (split equally across subjects as general study)
+  const date = todayKey();
+  const existing = await dbGet('hours', date) || {date, phy:0, chem:0, math:0};
+  const attRow = await dbGet('attendance', date) || {phy:false, chem:false, math:false};
+  const sessSubjects = pickedSubjects.length > 0 ? pickedSubjects : ['phy','chem','math'].filter(s => attRow[s]);
+  if (sessSubjects.length > 0) {
+    const perSubj = diffHrs / sessSubjects.length;
+    sessSubjects.forEach(s => { existing[s] = Math.round(((existing[s]||0) + perSubj)*100)/100; });
+  } else {
+    existing.phy  = Math.round(((existing.phy||0)  + diffHrs/3)*100)/100;
+    existing.chem = Math.round(((existing.chem||0) + diffHrs/3)*100)/100;
+    existing.math = Math.round(((existing.math||0) + diffHrs/3)*100)/100;
+  }
+  await dbPut('hours', existing);
+
+  // Save chapter-level hours to chapter_hours store (shared with JEE Tracker)
+  const chaptersAtCheckIn = attRow.pickedChapters || pickedChapters || {};
+  if (sessSubjects.length > 0) {
+    const perSubj = diffHrs / sessSubjects.length;
+    for (const s of sessSubjects) {
+      const chapName = chaptersAtCheckIn[s];
+      if (chapName) {
+        const chapKey = s + ':' + chapName;
+        const chapRow = await dbGet('chapter_hours', chapKey) || {key:chapKey, subj:s, chapName, totalHrs:0, sessions:[]};
+        chapRow.totalHrs = Math.round(((chapRow.totalHrs||0) + perSubj)*100)/100;
+        chapRow.sessions = chapRow.sessions || [];
+        chapRow.sessions.push({date, hrs: Math.round(perSubj*100)/100, ts: Date.now()});
+        if (chapRow.sessions.length > 50) chapRow.sessions = chapRow.sessions.slice(-50);
+        await dbPut('chapter_hours', chapRow);
+      }
+    }
+  }
+
+  // Save checkout time
+  const attRowUpd = await dbGet('attendance', date) || {date, phy:false, chem:false, math:false};
+  attRowUpd.checkOut  = outTime.toISOString();
+  attRowUpd.sessionHrs = (attRowUpd.sessionHrs||0) + diffHrs;
+  await dbPut('attendance', attRowUpd);
+
+  // Show session summary
+  const hh = Math.floor(diffHrs), mm = Math.round((diffHrs - hh)*60);
+  const dur = hh ? hh+'h '+mm+'m' : mm+'m';
+  document.getElementById('sessionLog').textContent =
+    'Last session: ' + fmtTime(checkInTime) + ' → ' + fmtTime(outTime) + ' (' + dur + ')';
+
+  showToast('🔴 Checked out · Session: ' + dur + ' logged!', 'var(--done)', 4000);
+  checkInTime = null;
+  pickedSubjects = [];
+  pickedChapters = {};
+  stopLiveTimer();
+  updatePickerUI();
+  updateChapterPickers();
+  lockPickerUI(false);
+  updateCheckStatus();
+  document.getElementById('checkInBtn').style.opacity       = '1';
+  document.getElementById('checkInBtn').style.pointerEvents = 'auto';
+  document.getElementById('checkOutBtn').style.opacity      = '.4';
+  document.getElementById('checkOutBtn').style.pointerEvents= 'none';
+}
+
+function fmtTime(d) {
+  return d.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
+}
+
+async function updateCheckStatus() {
+  const date = todayKey();
+  const row  = await dbGet('attendance', date);
+  let txt = '';
+  if (row && row.checkIn) {
+    txt = '🟢 Checked in: ' + fmtTime(new Date(row.checkIn));
+    if (row.checkOut) txt += '  ·  🔴 Out: ' + fmtTime(new Date(row.checkOut));
+    if (row.sessionHrs) txt += '  ·  ⏱ ' + shFmt(row.sessionHrs) + ' today';
+  } else {
+    txt = 'Not checked in yet today';
+  }
+  document.getElementById('checkStatus').textContent = txt;
+  // Restore checkInTime if already checked in but not out (persists across refresh)
+  if (row && row.checkIn && !row.checkOut && !checkInTime) {
+    checkInTime = new Date(row.checkIn);
+    // Restore which subjects were picked
+    pickedSubjects = ['phy','chem','math'].filter(s => row[s]);
+    updatePickerUI();
+    lockPickerUI(true);
+    startLiveTimer();
+    document.getElementById('checkInBtn').style.opacity       = '.4';
+    document.getElementById('checkInBtn').style.pointerEvents = 'none';
+    document.getElementById('checkOutBtn').style.opacity      = '1';
+    document.getElementById('checkOutBtn').style.pointerEvents= 'auto';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ATTENDANCE — Mark / Load / Save
+// ═══════════════════════════════════════════════════════════════════════════
+let markDate = todayKey();
+
+function setMarkDateToday() {
+  markDate = todayKey();
+  document.getElementById('markDatePicker').value = markDate;
+  refreshMarkBtns();
+}
+
+async function markAttendance(subj) {
+  const date = document.getElementById('markDatePicker').value || markDate;
+  const row  = await dbGet('attendance', date) || {date, phy:false, chem:false, math:false, ts: new Date().toISOString()};
+  row[subj]  = true;
+  row.ts     = new Date().toISOString();
+  await dbPut('attendance', row);
+  refreshMarkBtns();
+  showToast('✅ '+{phy:'Physics',chem:'Chemistry',math:'Maths'}[subj]+' marked present for '+fmtDate(date), 'var(--done)', 2500);
+}
+
+async function refreshMarkBtns() {
+  const date = document.getElementById('markDatePicker').value || todayKey();
+  const row  = await dbGet('attendance', date) || {phy:false, chem:false, math:false};
+  ['phy','chem','math'].forEach(s => {
+    const btn = document.getElementById('mbtn-'+s);
+    const lbl = document.getElementById('mbtn-'+s+'-lbl');
+    if (btn) btn.classList.toggle('active', !!row[s]);
+    if (lbl) lbl.textContent = row[s] ? '✅ Present' : 'Not marked';
+  });
+}
+
+async function clearTodayAttendance() {
+  const date = document.getElementById('markDatePicker').value || markDate;
+  if (!confirm('Clear attendance for '+fmtDate(date)+'?')) return;
+  await dbDelete('attendance', date);
+  refreshMarkBtns();
+  showToast('🗑 Cleared for '+fmtDate(date), 'var(--none)', 2000);
+}
+
+async function manualMark() {
+  const date = document.getElementById('manualDate').value;
+  if (!date) { showToast('⚠️ Pick a date first', 'var(--pend)', 2000); return; }
+  const subj = document.getElementById('manualSubj').value;
+  if (subj === 'all') {
+    const row = {date, phy:true, chem:true, math:true, ts:new Date().toISOString()};
+    await dbPut('attendance', row);
+    showToast('✅ All subjects marked present for '+fmtDate(date), 'var(--done)', 2500);
+  } else {
+    await markAttendanceForDate(date, subj);
+    showToast('✅ '+{phy:'Physics',chem:'Chemistry',math:'Maths'}[subj]+' marked for '+fmtDate(date), 'var(--done)', 2500);
+  }
+  refreshMarkBtns();
+}
+
+async function markAttendanceForDate(date, subj) {
+  const row = await dbGet('attendance', date) || {date, phy:false, chem:false, math:false, ts:new Date().toISOString()};
+  row[subj] = true;
+  row.ts    = new Date().toISOString();
+  await dbPut('attendance', row);
+}
+
+async function clearAllAttendance() {
+  if (!confirm('Delete ALL attendance records? This cannot be undone.')) return;
+  const all = await dbGetAll('attendance');
+  await Promise.all(all.map(r=>dbDelete('attendance',r.date)));
+  renderHistory(); renderDashboard();
+  showToast('🗑 All attendance cleared', 'var(--none)', 2000);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════════════════════════
+async function renderDashboard() {
+  const all = await dbGetAll('attendance');
+  const today = todayKey();
+
+  // Total days attended per subject
+  let phyDays=0, chemDays=0, mathDays=0, allDays=0;
+  all.forEach(r => {
+    if (r.phy)  phyDays++;
+    if (r.chem) chemDays++;
+    if (r.math) mathDays++;
+    if (r.phy && r.chem && r.math) allDays++;
+  });
+  const totalUnique = all.length;
+
+  // Streak
+  let streak = 0;
+  const sortedDates = all.map(r=>r.date).sort().reverse();
+  for (let i=0; i<sortedDates.length; i++) {
+    const expected = new Date(today);
+    expected.setDate(expected.getDate() - i);
+    const expKey = `${expected.getFullYear()}-${String(expected.getMonth()+1).padStart(2,'0')}-${String(expected.getDate()).padStart(2,'0')}`;
+    if (sortedDates[i] === expKey) streak++;
+    else break;
+  }
+  document.getElementById('streakPill').textContent = '🔥 '+streak+' day streak';
+
+  // Stats cards
+  const cardStyle = 'background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center';
+  document.getElementById('dashStats').innerHTML = `
+    <div style="${cardStyle}"><div class="stat-val" style="color:var(--accent)">${totalUnique}</div><div class="stat-lbl">Days Attended</div><div class="stat-sub">any subject</div></div>
+    <div style="${cardStyle}"><div class="stat-val" style="color:#60a0ff">${phyDays}</div><div class="stat-lbl">Physics Days</div></div>
+    <div style="${cardStyle}"><div class="stat-val" style="color:#60c890">${chemDays}</div><div class="stat-lbl">Chemistry Days</div></div>
+    <div style="${cardStyle}"><div class="stat-val" style="color:var(--pend)">${mathDays}</div><div class="stat-lbl">Maths Days</div></div>
+    <div style="${cardStyle}"><div class="stat-val" style="color:var(--done)">${allDays}</div><div class="stat-lbl">Full Days</div><div class="stat-sub">all 3 subjects</div></div>
+    <div style="${cardStyle}"><div class="stat-val" style="color:#ff8c00">${streak}</div><div class="stat-lbl">Current Streak</div><div class="stat-sub">consecutive days</div></div>`;
+
+  // Subject % bars
+  const maxD = Math.max(phyDays, chemDays, mathDays, 1);
+  document.getElementById('subjAttBars').innerHTML = [
+    {subj:'⚛️ Physics', days:phyDays, col:'#60a0ff'},
+    {subj:'🧪 Chemistry', days:chemDays, col:'#60c890'},
+    {subj:'📐 Maths', days:mathDays, col:'#f5c842'},
+  ].map(s => `
+    <div class="hrs-bar-row">
+      <span class="hrs-bar-label" style="color:${s.col}">${s.subj}</span>
+      <div class="hrs-bar-track"><div class="hrs-bar-fill" style="width:${Math.round(s.days/maxD*100)}%;background:${s.col}"></div></div>
+      <span class="hrs-bar-val" style="color:${s.col}">${s.days}d</span>
+    </div>`).join('');
+
+  // Weekly chart
+  const weekDays = [];
+  for (let i=6; i>=0; i--) {
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const r = await dbGet('attendance', k) || {};
+    weekDays.push({k, label:DAYS[d.getDay()], r});
+  }
+  document.getElementById('weeklyChart').innerHTML = weekDays.map(d => {
+    const count = (d.r.phy?1:0)+(d.r.chem?1:0)+(d.r.math?1:0);
+    const phH = d.r.phy  ? 22 : 0;
+    const chH = d.r.chem ? 22 : 0;
+    const mH  = d.r.math ? 22 : 0;
+    const isToday = d.k === today;
+    return `<div class="weekly-chart-col">
+      <div style="display:flex;flex-direction:column;justify-content:flex-end;height:60px;width:100%;gap:1px">
+        ${phH?`<div style="height:${phH}px;background:#60a0ff;border-radius:3px 3px 0 0;opacity:${isToday?1:.65}"></div>`:''}
+        ${chH?`<div style="height:${chH}px;background:#60c890;opacity:${isToday?1:.65}"></div>`:''}
+        ${mH ?`<div style="height:${mH}px;background:#f5c842;opacity:${isToday?1:.65}"></div>`:''}
+        ${!count?`<div style="height:3px;background:var(--border);border-radius:3px;margin-top:auto"></div>`:''}
+      </div>
+      <div class="weekly-chart-lbl" style="color:${isToday?'var(--accent)':''};">${d.label}</div>
+    </div>`;
+  }).join('');
+
+  // Heatmap (30 days)
+  const heatDays = [];
+  for (let i=29; i>=0; i--) {
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const r = await dbGet('attendance',k) || {};
+    heatDays.push({k,d,r});
+  }
+  const heatGrid = document.getElementById('heatmapGrid');
+  const heatDaysEl = document.getElementById('heatmapDays');
+  if (heatGrid) {
+    heatGrid.innerHTML = heatDays.map(({k,d,r}) => {
+      const cnt = (r.phy?1:0)+(r.chem?1:0)+(r.math?1:0);
+      let col = 'var(--border)';
+      if (cnt===1) { col = r.phy?'#60a0ff':r.chem?'#60c890':'#f5c842'; }
+      else if (cnt===2) col = '#22c55e';
+      else if (cnt===3) col = '#f5c842';
+      const isToday = k===today;
+      const lblParts = [];
+      if (r.phy)  lblParts.push('Physics');
+      if (r.chem) lblParts.push('Chemistry');
+      if (r.math) lblParts.push('Maths');
+      const tip = DAYS[d.getDay()]+', '+d.getDate()+' '+MONTHS[d.getMonth()]+': '+(cnt?lblParts.join(', '):'No attendance');
+      return `<div class="heatmap-cell" style="background:${col};outline:${isToday?'2px solid #f5c842':'none'};outline-offset:2px" title="${tip}"></div>`;
+    }).join('');
+    heatDaysEl.innerHTML = heatDays.map(({d}) => `<div style="text-align:center;font-size:.55rem;opacity:.3">${d.getDate()}</div>`).join('');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// HISTORY
+// ═══════════════════════════════════════════════════════════════════════════
+async function renderHistory() {
+  const all   = await dbGetAll('attendance');
+  const fSubj = document.getElementById('histFilter')?.value || 'all';
+  const today = todayKey();
+
+  let filtered = all.sort((a,b)=>b.date.localeCompare(a.date));
+  if (fSubj !== 'all') filtered = filtered.filter(r => r[fSubj]);
+
+  const tbody = document.getElementById('histTbody');
+  if (!tbody) return;
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;opacity:.3;font-size:.82rem">No attendance records yet. Mark attendance to get started!</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = filtered.map(r => {
+    const d = new Date(r.date+'T00:00:00');
+    const isToday = r.date === today;
+    const total = (r.phy?1:0)+(r.chem?1:0)+(r.math?1:0);
+    const badge = (v,label) => v
+      ? `<span class="status-badge status-present">✅ ${label}</span>`
+      : `<span class="status-badge status-absent">✕</span>`;
+    return `<tr>
+      <td><div style="font-weight:${isToday?700:400};color:${isToday?'var(--accent)':'var(--text)'}">${isToday?'Today':fmtDate(r.date)}</div></td>
+      <td style="opacity:.45">${DAYS[d.getDay()]}</td>
+      <td>${badge(r.phy,'Present')}</td>
+      <td>${badge(r.chem,'Present')}</td>
+      <td>${badge(r.math,'Present')}</td>
+      <td><span style="font-family:'Syne',sans-serif;font-weight:800;color:${total===3?'var(--done)':total>=1?'var(--pend)':'var(--none)'}">${total}/3</span></td>
+      <td><button onclick="deleteAttRecord('${r.date}')" style="background:none;border:none;color:var(--none);opacity:.35;cursor:pointer;font-size:.78rem;padding:2px 6px" title="Delete">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
+async function deleteAttRecord(date) {
+  if (!confirm('Delete attendance for '+fmtDate(date)+'?')) return;
+  await dbDelete('attendance', date);
+  renderHistory(); renderDashboard();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STUDY HOURS (from shared DB)
+// ═══════════════════════════════════════════════════════════════════════════
+async function renderHours() {
+  const all = await dbGetAll('hours');
+  let atPhy=0, atChem=0, atMath=0;
+  all.forEach(d => { atPhy+=d.phy||0; atChem+=d.chem||0; atMath+=d.math||0; });
+  const atTotal = atPhy+atChem+atMath;
+
+  // Stats cards
+  const cs = 'background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center';
+  document.getElementById('hrsStats').innerHTML = `
+    <div style="${cs}"><div class="stat-val" style="color:var(--accent)">${shFmt(atTotal)}</div><div class="stat-lbl">Total</div></div>
+    <div style="${cs}"><div class="stat-val" style="color:#60a0ff">${shFmt(atPhy)}</div><div class="stat-lbl">Physics</div></div>
+    <div style="${cs}"><div class="stat-val" style="color:#60c890">${shFmt(atChem)}</div><div class="stat-lbl">Chemistry</div></div>
+    <div style="${cs}"><div class="stat-val" style="color:var(--pend)">${shFmt(atMath)}</div><div class="stat-lbl">Maths</div></div>`;
+
+  // Bars
+  const maxH = Math.max(atPhy, atChem, atMath, 1);
+  document.getElementById('hrsBars').innerHTML = [
+    {subj:'⚛️ Physics', h:atPhy, col:'#60a0ff'},
+    {subj:'🧪 Chemistry', h:atChem, col:'#60c890'},
+    {subj:'📐 Maths', h:atMath, col:'#f5c842'},
+  ].map(s=>`
+    <div class="hrs-bar-row">
+      <span class="hrs-bar-label" style="color:${s.col}">${s.subj}</span>
+      <div class="hrs-bar-track"><div class="hrs-bar-fill" style="width:${Math.round(s.h/maxH*100)}%;background:${s.col}"></div></div>
+      <span class="hrs-bar-val" style="color:${s.col}">${shFmt(s.h)}</span>
+    </div>`).join('');
+
+  // 7-day chart
+  const DAYS2=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const weekDays=[];
+  for(let i=6;i>=0;i--){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const row=await dbGet('hours',k)||{phy:0,chem:0,math:0};
+    weekDays.push({k,label:DAYS2[d.getDay()],row});
+  }
+  const today = todayKey();
+  const maxDayH = Math.max(...weekDays.map(d=>(d.row.phy||0)+(d.row.chem||0)+(d.row.math||0)),1);
+  document.getElementById('hrsWeekChart').innerHTML = weekDays.map(d=>{
+    const ph=Math.round(((d.row.phy||0)/maxDayH)*80);
+    const ch=Math.round(((d.row.chem||0)/maxDayH)*80);
+    const mh=Math.round(((d.row.math||0)/maxDayH)*80);
+    const isSel=d.k===today;
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:0">
+      <div style="display:flex;flex-direction:column;justify-content:flex-end;height:80px;width:100%;gap:1px">
+        ${ph?`<div style="height:${ph}px;background:#60a0ff;border-radius:3px 3px 0 0;opacity:${isSel?1:.7}"></div>`:''}
+        ${ch?`<div style="height:${ch}px;background:#60c890;opacity:${isSel?1:.7}"></div>`:''}
+        ${mh?`<div style="height:${mh}px;background:var(--accent);opacity:${isSel?1:.7}"></div>`:''}
+        ${!ph&&!ch&&!mh?`<div style="height:3px;background:var(--border);border-radius:3px;margin-top:auto"></div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('hrsWeekLabels').innerHTML = weekDays.map(d=>{
+    const t=(d.row.phy||0)+(d.row.chem||0)+(d.row.math||0);
+    const isSel=d.k===today;
+    return `<div style="flex:1;text-align:center;font-size:.65rem;color:${isSel?'var(--accent)':'var(--text2)'};font-weight:${isSel?700:400}">${d.label}<br><span style="font-size:.6rem;opacity:.5">${shFmt(t)}</span></div>`;
+  }).join('');
+
+  // History
+  const sortedH = [...all].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,30).filter(d=>(d.phy||0)+(d.chem||0)+(d.math||0)>0);
+  const hDiv = document.getElementById('hrsHistory');
+  if (!sortedH.length) {
+    hDiv.innerHTML='<div style="padding:18px;text-align:center;opacity:.3;font-size:.82rem">No hours logged yet. Open the JEE Tracker and log your study hours.</div>';
+  } else {
+    hDiv.innerHTML = sortedH.map(d=>{
+      const t=(d.phy||0)+(d.chem||0)+(d.math||0);
+      const dd=new Date(d.date+'T00:00:00');
+      const isToday2=d.date===today;
+      return `<div style="display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border);gap:12px">
+        <div style="min-width:90px">
+          <div style="font-size:.82rem;font-weight:${isToday2?700:400};color:${isToday2?'var(--accent)':'var(--text)'}">${isToday2?'Today':dd.toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</div>
+          <div style="font-size:.68rem;opacity:.35">${DAYS2[dd.getDay()]}</div>
+        </div>
+        <div style="flex:1;display:flex;gap:10px;flex-wrap:wrap">
+          <span style="font-size:.78rem;color:#60a0ff">⚛️ ${shFmt(d.phy||0)}</span>
+          <span style="font-size:.78rem;color:#60c890">🧪 ${shFmt(d.chem||0)}</span>
+          <span style="font-size:.78rem;color:var(--accent)">📐 ${shFmt(d.math||0)}</span>
+        </div>
+        <div style="font-size:.88rem;font-weight:700;color:var(--accent);font-family:'Syne',sans-serif;min-width:44px;text-align:right">${shFmt(t)}</div>
+      </div>`;
+    }).join('');
+  }
+}
+
+
+// ═══════════════════════════════════════════════════════════════════════
+// MOBILE NAV
+// ═══════════════════════════════════════════════════════════════════════
+function mnavGo(tab) {
+  showTab(tab);
+  document.querySelectorAll('.mobile-nav-item').forEach(b=>b.classList.remove('active'));
+  const el = document.getElementById('mnav-'+tab);
+  if (el) el.classList.add('active');
+}
+// ═══════════════════════════════════════════════════════════════════════════
+// THEME & EXPORT
+// ═══════════════════════════════════════════════════════════════════════════
+function toggleFullscreen() {
+  const btn = document.getElementById('fsBtn');
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().then(() => {
+      btn.textContent = '✕ Exit Full';
+    }).catch(e => showToast('❌ Fullscreen: ' + e.message, 'var(--none)', 3000));
+  } else {
+    document.exitFullscreen().then(() => {
+      btn.textContent = '⛶ Fullscreen';
+    });
+  }
+}
+document.addEventListener('fullscreenchange', () => {
+  const btn = document.getElementById('fsBtn');
+  if (btn) btn.textContent = document.fullscreenElement ? '✕ Exit Full' : '⛶ Fullscreen';
+});
+
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  kvSet('theme', next);
+}
+
+async function exportAttendance() {
+  const all = await dbGetAll('attendance');
+  const today = todayKey();
+  const rows = [['Date','Day','Physics','Chemistry','Maths','Total','Notes']];
+  all.sort((a,b)=>a.date.localeCompare(b.date)).forEach(r => {
+    const d = new Date(r.date+'T00:00:00');
+    const total = (r.phy?1:0)+(r.chem?1:0)+(r.math?1:0);
+    rows.push([r.date, DAYS[d.getDay()], r.phy?'Present':'Absent', r.chem?'Present':'Absent', r.math?'Present':'Absent', total+'/3', '']);
+  });
+  const csv = rows.map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=`attendance_suteja_${today}.csv`; a.click();
+  URL.revokeObjectURL(url);
+  showToast('📤 Attendance exported!', 'var(--done)', 2000);
+}
+
+
+// ═══════════════════════════════════════════════════════════════════════
+// JSON EXPORT / IMPORT (for syncing with other device via WhatsApp etc)
+// ═══════════════════════════════════════════════════════════════════════
+async function exportAttendanceJSON() {
+  try {
+    const safeGet = async (s) => { try { return await dbGetAll(s); } catch(e) { return []; } };
+    const [attendance, hours, allKv] = await Promise.all([safeGet('attendance'), safeGet('hours'), safeGet('kv')]);
+    const kv = {}; allKv.forEach(r => { kv[r.key] = r.val; });
+    const payload = { version:2, exportedAt:new Date().toISOString(), app:'JEE Attendance', attendance, hours, kv };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'jee_attendance_' + new Date().toISOString().slice(0,10) + '.json';
+    a.click(); URL.revokeObjectURL(url);
+    showToast('📤 Exported! Send via WhatsApp / email to other device.', 'var(--done)', 4000);
+  } catch(e) { showToast('❌ Export failed: ' + e.message, 'var(--none)'); }
+}
+
+async function importAttendanceJSON(event) {
+  const file = event.target.files[0]; if (!file) return;
+  event.target.value = '';
+  try {
+    const payload = JSON.parse(await file.text());
+    const date = payload.exportedAt ? new Date(payload.exportedAt).toLocaleString('en-IN') : 'unknown';
+    if (!confirm('Import attendance from ' + date + '?\nExisting data will be merged.')) return;
+    const safePut = async (s, rows) => { for (const r of (rows||[])) { try { await dbPut(s,r); } catch(e){} } };
+    await safePut('attendance', payload.attendance);
+    await safePut('hours', payload.hours);
+    if (payload.kv) await Promise.all(Object.entries(payload.kv).map(([k,v])=>kvSet(k,v)));
+    showToast('✅ Import done! Reloading…', 'var(--done)', 2000);
+    setTimeout(()=>location.reload(), 2100);
+  } catch(e) { showToast('❌ Import failed: ' + e.message, 'var(--none)', 4000); }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════════════
+window.addEventListener('load', async () => {
+  try {
+    await dbOpen();
+    showToast('✅ Connected to JEE Tracker database', 'var(--done)', 2000);
+  } catch(e) {
+    showToast('❌ DB error: '+e.message, 'var(--none)', 4000);
+    return;
+  }
+
+  // Restore theme
+  const savedTheme = await kvGet('theme', null);
+  if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
+
+  // Set today date in pickers
+  const t = todayKey();
+  document.getElementById('markDatePicker').value = t;
+  document.getElementById('manualDate').value     = t;
+  document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+  // Restore today's check-in state if already verified earlier
+  await updateCheckStatus();
+
+  // Refresh mark buttons
+  await refreshMarkBtns();
+});
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
