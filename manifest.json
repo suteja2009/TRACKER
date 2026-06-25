@@ -1,6 +1,7 @@
 {
   "name": "JEE 2027 Tracker",
   "short_name": "JEE 2027",
+  "id": "/TRACKER/tracker.html",
   "description": "JEE study tracker and attendance for 2027",
   "start_url": "./tracker.html",
   "scope": "./",
